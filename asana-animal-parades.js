@@ -9,10 +9,19 @@ function getRandomInt(min, max) {
 }
 function fireAnimalParade(checkbox) {
     setTimeout(function() {
-        if(!checkbox.classList.contains("TaskRowCompletionStatus-checkbox--incomplete")) {
+        /* if the checkbox class list no longer contains incomplete (which means it's now complete),
+         * OR the checkbox no longer is a checkbox because the user isn't showing complete tasks. */
+        if(!checkbox.classList.contains("TaskRowCompletionStatus-checkbox--incomplete") || checkbox.style.all === "") {
+            /* how many milliseconds between each animation?
+             * easy to think of as the "space between" animals
+             * in the parade, thus the variable name. */
             var animalSpace = getRandomInt(250, 500);
             /* need "window" here to maintain asana's context */
-            var animalInterval = setInterval(window.host.wrapInExceptionHandler(window.AsanaRainbow.start, window.ExceptionHandler.ReentryStrategy.DELAY, function(){window.AsanaRainbow.start()}), animalSpace);
+            var animalInterval = setInterval(window.host.wrapInExceptionHandler(
+                window.AsanaRainbow.start,
+                window.ExceptionHandler.ReentryStrategy.DELAY,
+                function(){window.AsanaRainbow.start()}
+            ), animalSpace);
             setTimeout(function(){clearInterval(animalInterval)}, getRandomInt(1500, 5000));
         }
     }, 1500);
@@ -20,7 +29,9 @@ function fireAnimalParade(checkbox) {
 function resetCurrentCheckboxes() {
     asanaCheckboxes = document.getElementsByClassName("TaskRowCompletionStatus-checkbox--incomplete");
     for(var i = 0; i < asanaCheckboxes.length; i++) {
-        asanaCheckboxes[i].addEventListener("mouseup", fireAnimalParade(asanaCheckboxes[i]), false)
+        asanaCheckboxes[i].addEventListener("mouseup", function() {
+            fireAnimalParade(this);
+        }, false);
     }
 }
 /* Exports */
