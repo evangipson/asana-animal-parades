@@ -1,5 +1,4 @@
-var asanaCheckboxes;
-var ASANAPARADES = {}; // global variable to store disable and enable functions for popup.js
+var asanaCheckboxes, asanaCompleteButtons;
 
 /* got from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random */
 function getRandomInt(min, max) {
@@ -7,43 +6,45 @@ function getRandomInt(min, max) {
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min)) + min;
 }
-function fireAnimalParade(checkbox) {
+function fireAnimalParade(input) {
+    /* if the input class list contains complete,
+     * OR the input's parent parent is showing "animationCompletion"
+     * because the user isn't showing complete tasks. */
     setTimeout(function() {
-        /* if the checkbox class list no longer contains incomplete (which means it's now complete),
-         * OR the checkbox no longer is a checkbox because the user isn't showing complete tasks. */
-        if(!checkbox.classList.contains("TaskRowCompletionStatus-checkbox--incomplete") || checkbox.style.all === "") {
+        if(input.classList.contains("CompletionButton--isCompleted") ||
+        input.parentElement.parentElement.classList.contains("TaskRow--animatingCompletion")) {
             /* how many milliseconds between each animation?
-             * easy to think of as the "space between" animals
-             * in the parade, thus the variable name. */
-            var animalSpace = getRandomInt(250, 500);
+                * easy to think of as the "space between" animals
+                * in the parade, thus the variable name. */
+            var animalSpace = getRandomInt(350, 650);
             /* need "window" here to maintain asana's context */
             var animalInterval = setInterval(window.host.wrapInExceptionHandler(
                 window.AsanaRainbow.start,
                 window.ExceptionHandler.ReentryStrategy.DELAY,
                 function(){window.AsanaRainbow.start()}
             ), animalSpace);
-            setTimeout(function(){clearInterval(animalInterval)}, getRandomInt(1500, 5000));
+            setTimeout(function(){
+                clearInterval(animalInterval);
+            }, getRandomInt(1500, 4000));
         }
-    }, 1500);
+    }, 100);
 }
 function resetCurrentCheckboxes() {
+    /* now fill up the new event listeners */
     asanaCheckboxes = document.getElementsByClassName("TaskRowCompletionStatus-checkbox--incomplete");
+    asanaCompleteButtons = document.getElementsByClassName("CompletionButton--isIncomplete");
     for(var i = 0; i < asanaCheckboxes.length; i++) {
-        asanaCheckboxes[i].addEventListener("mouseup", function() {
-            fireAnimalParade(this);
+        asanaCheckboxes[i].addEventListener("click", function() {
+            fireAnimalParade(this)
+        }, false);
+    }
+    for(var i = 0; i < asanaCompleteButtons.length; i++) {
+        asanaCompleteButtons[i].addEventListener("click", function() {
+            fireAnimalParade(this)
         }, false);
     }
 }
-/* Exports */
-ASANAPARADES.disableParades = function() {
-    asanaCheckboxes = null;
-    document.removeEventListener("click", resetCurrentCheckboxes);
-    document.removeEventListener("keyup", resetCurrentCheckboxes);
-}
-/* Pipe into DOMContentLoaded, keyup, and click because they can all potentially create checkboxes */
-ASANAPARADES.enableParades = function() {
-    resetCurrentCheckboxes();
-    document.addEventListener("click", resetCurrentCheckboxes);
-    document.addEventListener("keyup", resetCurrentCheckboxes);
-}
-ASANAPARADES.enableParades();
+/* Pipe into DOMContentLoaded, keyup, and click because they can all potentially create inputs */
+resetCurrentCheckboxes();
+document.addEventListener("click", resetCurrentCheckboxes, false);
+document.addEventListener("keyup", resetCurrentCheckboxes, false);
